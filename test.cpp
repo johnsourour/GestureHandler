@@ -113,20 +113,11 @@ void arapaho(cv::Mat image, ArapahoV2* p)
             
             int numObjects = 0;
             
-#ifdef _ENABLE_OPENCV_SCALING
-            // Detect the objects in the image
             p->Detect(
                 image,
-                0.24,
-                0.5,
+                0.85,
+                1,
                 numObjects);
-#else
-            p->Detect(
-                arapahoImage,
-                0.24,
-                0.5,
-                numObjects);
-#endif
             std::chrono::duration<double> detectionTime = (std::chrono::system_clock::now() - detectionStartTime);
             
             printf("==> Detected [%d] objects in [%f] seconds\n", numObjects, detectionTime.count());
@@ -248,32 +239,41 @@ int main(int argc, char * argv[]) try
     // Declare depth colorizer for pretty visualization of depth data
     rs2::colorizer color_map;
     // Declare rates printer for showing streaming rates of the enabled streams.
-    //rs2::rates_printer printer;
+    rs2::rates_printer printer;
 
     // Declare RealSense pipeline, encapsulating the actual device and sensors
     rs2::pipeline pipe;
-
+     rs2::config cfg;
+    //cfg.enable_stream(RS2_STREAM_COLOR); //this will cause seg fault in Mat(...)
+    cfg.enable_stream(RS2_STREAM_COLOR, RS2_FORMAT_BGR8);
+    rs2::pipeline_profile pp = pipe.start(cfg);
+    rs2::stream_profile sp = pp.get_stream(RS2_STREAM_COLOR);
     // Start streaming with default recommended configuration
     // The default video configuration contains Depth and Color streams
     // If a device is capable to stream IMU data, both Gyro and Accelerometer are enabled by default
-    pipe.start();
+    //pipe.start();
     using namespace cv;
-	const auto window_name = "Display Image";
-    namedWindow(window_name, WINDOW_AUTOSIZE);
-	while (waitKey(1) < 0 && getWindowProperty(window_name, WND_PROP_AUTOSIZE) >= 0) // Application still alive?
+	//const auto window_name = "Display Image";
+    //namedWindow(window_name, WINDOW_AUTOSIZE);
+	while (waitKey(1) < 0) // Application still alive?
     {
-        rs2::frameset data = pipe.wait_for_frames();   // Find and colorize the depth data
-
+        rs2::frameset data = pipe.wait_for_frames();  
+        rs2::video_frame color = data.get_color_frame();
 		//rs2_stream align_to = find_stream_to_align(profile.get_streams());
 		//rs2::align align(align_to);
 		//auto processed = align.process(data);
 		//rs2::video_frame color_frame = processed.first(align_to);
 		//rs2::depth_frame depth_frame = processed.get_depth_frame();
+        const int w = color.get_width();
+        const int h = color.get_height();
+
+        // Create OpenCV matrix of size (w,h) from the colorized color data
+        Mat image(Size(w, h), CV_8UC3, (void*)color.get_data(), Mat::AUTO_STEP);
+
+            resize(image, image, cv::Size(), 0.75, 0.75);
 		//const int w = data.as<rs2::video_frame>().get_width();
 		//const int h = data.as<rs2::video_frame>().get_height();
-		rs2::frame color = data.get_color_frame();
-        //.apply_filter(color_map);
-
+		
         // Query frame size (width and height
 
         // Create OpenCV matrix of size (w,h) from the colorized depth data
@@ -284,8 +284,10 @@ int main(int argc, char * argv[]) try
         // The show method, when applied on frameset, break it to frames and upload each frame into a gl textures
         // Each texture is displayed on different viewport according to it's stream unique id
        //	app.show(data);
-       imshow(window_name, frame_to_mat(color));
-		arapaho(frame_to_mat(color), p);
+        // imshow(window_name, frame_to_mat(color));
+		// arapaho(frame_to_mat(color), p);
+        //imshow(window_name, image);
+		arapaho(image, p);
     }
 
     

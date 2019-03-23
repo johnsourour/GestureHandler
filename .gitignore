@@ -1,0 +1,7 @@
+arapaho
+.vscode
+*.o
+gr.data
+gr.cfg
+gr.weights
+input.names

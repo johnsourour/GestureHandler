@@ -1,0 +1,3 @@
+[submodule "deps/darknet"]
+	path = deps/darknet
+	url = https://github.com/prabindh/darknet.git

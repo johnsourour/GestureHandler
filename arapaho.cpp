@@ -125,7 +125,8 @@ bool ArapahoV2::Detect(
     ArapahoV2ImageBuff & imageBuff,
     float thresh,
     float hier_thresh,
-    int & objectCount)
+    int & objectCount,
+    float probs[])
 {
     int i, j, k, count = 0;
 
@@ -175,7 +176,7 @@ bool ArapahoV2::Detect(
 
     if (inputImage.h != net->h || inputImage.w != net->w)
     {
-        DPRINTF("Detect: Resizing image to match network \n");
+        //DPRINTF("Detect: Resizing image to match network \n");
         // Free the original buffer, and assign a new resized buffer
         image inputImageTemp = resize_image(inputImage, net->w, net->h);
         free_image(inputImage);
@@ -190,7 +191,7 @@ bool ArapahoV2::Detect(
         }
     }
     
-    __Detect(inputImage.data, thresh, hier_thresh, objectCount);
+    __Detect(inputImage.data, thresh, hier_thresh, objectCount, probs);
 
     free_image(inputImage);
     return true;
@@ -206,7 +207,8 @@ bool ArapahoV2::Detect(
             const cv::Mat & inputMat,
             float thresh, 
             float hier_thresh,
-            int & objectCount)
+            int & objectCount,
+            float probs[])
 {     
     objectCount = 0;
     threshold = thresh;
@@ -234,7 +236,7 @@ bool ArapahoV2::Detect(
 
     if (floatMat.rows != net->h || floatMat.cols != net->w)
     {
-        DPRINTF("Detect: Resizing image to match network \n");
+        //DPRINTF("Detect: Resizing image to match network \n");
         resize(floatMat, floatMat, cv::Size(net->w, net->h));
     }
 
@@ -249,7 +251,7 @@ bool ArapahoV2::Detect(
     vconcat(floatMatChannels[0], floatMatChannels[1], floatMat);
     vconcat(floatMat, floatMatChannels[2], floatMat);
 
-    __Detect((float*)floatMat.data, thresh, hier_thresh, objectCount);
+    __Detect((float*)floatMat.data, thresh, hier_thresh, objectCount, probs);
 
     return true;
 }
@@ -288,7 +290,7 @@ bool ArapahoV2::GetBoxes(box* outBoxes, std::string* outLabels, int boxCount)
 //////////////////////////////////////////////////////////////////
 /// Private APIs
 //////////////////////////////////////////////////////////////////
-void ArapahoV2::__Detect(float* inData, float thresh, float hier_thresh, int & objectCount)
+void ArapahoV2::__Detect(float* inData, float thresh, float hier_thresh, int & objectCount, float probs[])
 {
     int i, j;
     // Predict
@@ -306,6 +308,7 @@ void ArapahoV2::__Detect(float* inData, float thresh, float hier_thresh, int & o
         for(j = 0; j < l.classes; ++j){
             if (dets[i].prob[j] > thresh)
             {
+                probs[objectCount]=dets[i].prob[j];
                 objectCount++;
             }
         }

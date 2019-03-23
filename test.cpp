@@ -99,7 +99,7 @@ void arapaho(cv::Mat image, ArapahoV2* p)
         {
             imageWidthPixels = image.size().width;
             imageHeightPixels = image.size().height;
-            DPRINTF("Image data = %p, w = %d, h = %d\n", image.data, imageWidthPixels, imageHeightPixels);
+            //DPRINTF("Image data = %p, w = %d, h = %d\n", image.data, imageWidthPixels, imageHeightPixels);
             
             // Remember the time
             auto detectionStartTime = std::chrono::system_clock::now();
@@ -113,15 +113,17 @@ void arapaho(cv::Mat image, ArapahoV2* p)
             
             int numObjects = 0;
             
+            float probs[50];
             p->Detect(
                 image,
-                0.85,
+                0.8,
                 1,
-                numObjects);
+                numObjects,
+                probs);
             std::chrono::duration<double> detectionTime = (std::chrono::system_clock::now() - detectionStartTime);
             
-            printf("==> Detected [%d] objects in [%f] seconds\n", numObjects, detectionTime.count());
-            
+            //printf("==> Detected [%d] objects in [%f] seconds\n", numObjects, detectionTime.count());
+            //DPRINTF("\n");
             if(numObjects > 0 && numObjects < MAX_OBJECTS_PER_FRAME) // Realistic maximum
             {    
                 boxes = new box[numObjects];
@@ -143,7 +145,6 @@ void arapaho(cv::Mat image, ArapahoV2* p)
                     }
                     return;
                 }
-                
                 // Get boxes and labels
                 p->GetBoxes(
                     boxes,
@@ -159,8 +160,8 @@ void arapaho(cv::Mat image, ArapahoV2* p)
                     leftTopY = 1 + imageHeightPixels*(boxes[objId].y - boxes[objId].h / 2);
                     rightBotX = 1 + imageWidthPixels*(boxes[objId].x + boxes[objId].w / 2);
                     rightBotY = 1 + imageHeightPixels*(boxes[objId].y + boxes[objId].h / 2);
-                    DPRINTF("Box #%d: center {x,y}, box {w,h} = [%f, %f, %f, %f]\n", 
-                            objId, boxes[objId].x, boxes[objId].y, boxes[objId].w, boxes[objId].h);
+                    // DPRINTF("Box #%d: center {x,y}, box {w,h} = [%f, %f, %f, %f] - acc = %f\n", 
+                    //         objId, boxes[objId].x, boxes[objId].y, boxes[objId].w, boxes[objId].h, probs[objId]);
                     // Show image and overlay using OpenCV
                     rectangle(image,
                         cvPoint(leftTopX, leftTopY),
@@ -169,10 +170,12 @@ void arapaho(cv::Mat image, ArapahoV2* p)
                     // Show labels
                     if (labels[objId].c_str())
                     {
-                        DPRINTF("Label:%s\n\n", labels[objId].c_str());
+                        //DPRINTF("Label:%s\n\n", labels[objId].c_str());
                         putText(image, labels[objId].c_str(), cvPoint(leftTopX, leftTopY),
                             FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(200, 200, 250), 1, CV_AA);
                     }
+                    DPRINTF("center (%f,%f), label = %s , acc = %f\n", 
+                            boxes[objId].x, boxes[objId].y, labels[objId].c_str(), probs[objId]);
                 }
                 
                 if (boxes)

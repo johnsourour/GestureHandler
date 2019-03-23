@@ -74,15 +74,18 @@
             ArapahoV2ImageBuff & imageBuff,
             float thresh,
             float hier_thresh,
-            int & objectCount);
+            int & objectCount,
+            float probs[]);
 
         bool Detect(
             const cv::Mat & inputMat,
             float thresh,
             float hier_thresh,
-            int & objectCount);
+            int & objectCount,
+            float probs[]);
 
         bool GetBoxes(box* outBoxes, std::string* outLabels, int boxCount);
+
     private:
         detection *dets;
         int     nboxes;
@@ -94,7 +97,7 @@
         int     maxClasses;
         float     threshold;
 
-        void __Detect(float* inData, float thresh, float hier_thresh, int & objectCount);
+        void __Detect(float* inData, float thresh, float hier_thresh, int & objectCount, float probs[]);
     };
 
     //////////////////////////////////////////////////////////////////////////

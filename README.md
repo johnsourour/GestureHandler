@@ -16,6 +16,7 @@ Arapaho is included as a git submodule
  - Fetch the darknet library
  - Run `make darknet-cpp-shared` in deps/darknet
  - Copy libdarknet-cpp-shared.so to the main directory
+ - Add the dataset configuration files (.cfg, .data, .names and .weights) + adjust names.
  - Call `make` from main directory
  - Run `./arapaho`
 

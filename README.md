@@ -1,6 +1,6 @@
 # Gesture Handler
 
-Integration between Realsense 2 SDK and the Darknet Arapaho YOLO Wrapper, using our own custom data set.
+Integration between Realsense 2 SDK and the Darknet Arapaho YOLO Wrapper, using our own custom dataset.
 
 ## Dependencies
 
